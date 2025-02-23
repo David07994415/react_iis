@@ -1,0 +1,71 @@
+======= 非 react framework === client side render
+
+1. Pool 使用：No Managed / 整合式
+2. 確認 IIS 的 一般HTTP功能 有開啟靜態內容
+3. IIS 要裝設 URL ReWrite 功能
+4. 如果是站台下面應用程式，該名稱會影響後續URL(如果叫做test)
+5. vite.config.js
+export default defineConfig({
+   base: "/test/", // 這裡要填你的部署路徑  
+})
+
+6. main.jsx
+const basename = import.meta.env.BASE_URL; // 讓它自動偵測 base
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <BrowserRouter  basename={basename}>
+      <App />
+    </BrowserRouter>
+
+  </StrictMode>,
+)
+
+7.在 dist 資料夾加入web.config(注意有沒有應用程式路徑 /test/)
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.webServer>
+        <rewrite>
+            <rules>
+                <rule name="React Router" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions logicalGrouping="MatchAll">
+                        <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                        <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="/test/index.html" />
+                </rule>
+            </rules>
+        </rewrite>
+    </system.webServer>
+</configuration>
+
+
+
+======= react router v7 ==== server side render
+
+1. IIS 要裝設 ApplicationRequestRouter_amd64  功能
+2. 在react 根目錄資料夾內部建立 web.config
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.webServer>
+        <rewrite>
+            <rules>
+
+                <!-- 靜態資源處理 -->
+                <!-- <rule name="Static Files Rewrite" stopProcessing="true">
+                    <match url="^assets/(.*)" />
+                    <action type="Rewrite" url="http://localhost:3000/test2/assets/{R:1}" />
+                </rule> -->
+
+                <rule name="ReverseProxyInboundRule1" stopProcessing="true">
+                    <match url="(.*)" />
+                    <action type="Rewrite" url="http://localhost:3000/{R:1}" />
+                </rule>
+            </rules>
+        </rewrite>
+    </system.webServer>
+</configuration>
+
+
+
+
