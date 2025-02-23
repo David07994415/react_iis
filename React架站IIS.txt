@@ -67,5 +67,45 @@ createRoot(document.getElementById('root')).render(
 </configuration>
 
 
+======= react router v7 ==== client side render
+1. 關閉 ssr @ react-router.config.ts
+export default {
+  // Config options...
+  // Server-side render by default, to enable SPA mode set this to `false`
+  ssr: false,
+} satisfies Config;
+
+2. 修改 vite.config.ts，加上 base
+export default defineConfig({
+  plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  base: "/test/", // 這裡要填你的部署路徑    /test2/
+});
+
+3. 修改 routes.ts，加上 prefix
+export default [...prefix("test", [
+    index("routes/home.tsx")
+  ]),] satisfies RouteConfig;
+
+4. 執行 npm run build後，在build =>client 資料夾內部加上 web.config(注意有沒有應用程式路徑 /test/)
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.webServer>
+        <rewrite>
+            <rules>
+                <rule name="React Router" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions logicalGrouping="MatchAll">
+                        <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                        <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="/test/index.html" />
+                </rule>
+            </rules>
+        </rewrite>
+    </system.webServer>
+</configuration>
+
+
+
 
 
